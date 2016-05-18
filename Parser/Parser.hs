@@ -3,7 +3,7 @@ module Parser(parseRegExpr) where
 import RegExpr
 import NumSym
 import Text.ParserCombinators.Parsec
-
+import Data.Either.Combinators
 
 
 pA :: GenParser Char st Char
@@ -59,3 +59,7 @@ toRegExprNum (i, Union l r) = let (i',l') = toRegExprNum (i,l)
                                   in (i'', Union l' r')
 toRegExprNum (i, Kleene h)  = let (i', h') = toRegExprNum (i,h)
                                   in (i', Kleene h')
+
+parseRegExprNum :: SourceName -> String -> RegExpr (NumSym Char)
+parseRegExprNum source st = snd $ toRegExprNum (1,noNum)
+                              where noNum = fromRight' (parseRegExpr source st)
