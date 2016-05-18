@@ -26,6 +26,6 @@ instance (Ord a) => Ord (NumSym a) where
   compare NTerm    NTerm      = EQ
 
 instance (Show a) => Show (NumSym a) where
-  show NEp = "€"
+  show NEp = "ε"
   show (NS num d) = (show d)++"_"++(show num)
   show NTerm = "˧"

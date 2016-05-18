@@ -4,6 +4,8 @@ import RegExpr
 import NumSym
 import Text.ParserCombinators.Parsec
 import Data.Either.Combinators
+import Data.Set(Set)
+import qualified Data.Set as Set
 
 
 pA :: GenParser Char st Char
@@ -63,3 +65,22 @@ toRegExprNum (i, Kleene h)  = let (i', h') = toRegExprNum (i,h)
 parseRegExprNum :: SourceName -> String -> RegExpr (NumSym Char)
 parseRegExprNum source st = snd $ toRegExprNum (1,noNum)
                               where noNum = fromRight' (parseRegExpr source st)
+
+nulo :: RegExpr a -> Bool
+nulo Empty        = False
+nulo (Sym a)      = False
+nulo (Con e e')   = (nulo e) && (nulo e')
+nulo (Union e e') = (nulo e) || (nulo e')
+nulo (Kleene e)   = True
+
+inicial :: (Ord a) => RegExpr a -> (Set a)
+inicial Empty        = Set.empty
+inicial (Sym a)      = Set.fromList (a:[])
+inicial (Union e e') = Set.union (inicial e) (inicial e')
+inicial (Con e e')   = if nulo(e)
+                        then Set.union (inicial e) (inicial e')
+                        else (inicial e)
+inicial (Kleene e)   = inicial e
+
+final :: RegExpr a -> (Set a)
+final Empty = undefined
