@@ -67,7 +67,7 @@ parseRegExprNum source st = snd $ toRegExprNum (1,noNum)
                               where noNum = fromRight' (parseRegExpr source st)
 
 nulo :: RegExpr a -> Bool
-nulo Empty        = False
+nulo Empty        = True --PREGUNTAR
 nulo (Sym a)      = False
 nulo (Con e e')   = (nulo e) && (nulo e')
 nulo (Union e e') = (nulo e) || (nulo e')
@@ -82,5 +82,22 @@ inicial (Con e e')   = if nulo(e)
                         else (inicial e)
 inicial (Kleene e)   = inicial e
 
-final :: RegExpr a -> (Set a)
-final Empty = undefined
+final :: (Ord a) => RegExpr a -> (Set a)
+final Empty = Set.empty
+final (Sym a) = Set.fromList (a:[])
+final (Union e e') = Set.union (final e) (final e')
+final (Con e e')  = if nulo(e')
+                      then Set.union (final e) (final e')
+                      else (final e')
+final (Kleene e) = final e
+
+cartesian :: (Ord a, Ord b) => Set a -> Set b -> Set (a,b)
+cartesian x y = Set.fromList [(i,j)| i <- (Set.toList x), j <- (Set.toList y) ] 
+
+
+dig :: (Ord a, Ord b) => RegExpr a -> (Set (a,b))
+dig Empty        = cartesian Set.empty Set.empty
+dig (Sym a)      = cartesian Set.empty Set.empty
+dig (Union e e') = Set.union (dig e) (dig e')
+dig (Con e e')   = Set.union (dig e) (cartesian final(e) inicial(e'))
+                     
