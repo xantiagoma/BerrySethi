@@ -95,9 +95,10 @@ cartesian :: (Ord a, Ord b) => Set a -> Set b -> Set (a,b)
 cartesian x y = Set.fromList [(i,j)| i <- (Set.toList x), j <- (Set.toList y) ] 
 
 
-dig :: (Ord a, Ord b) => RegExpr a -> (Set (a,b))
-dig Empty        = cartesian Set.empty Set.empty
-dig (Sym a)      = cartesian Set.empty Set.empty
+dig :: (Ord a) => RegExpr a -> Set (a,a)
+dig Empty        = Set.empty
+dig (Sym a)      = Set.empty
 dig (Union e e') = Set.union (dig e) (dig e')
-dig (Con e e')   = Set.union (dig e) (cartesian final(e) inicial(e'))
+dig (Con e e')   = Set.union (dig e) (Set.union (dig e') (cartesian (final(e)) (inicial(e'))))
+dig (Kleene e)   = Set.union (dig e) (cartesian (final(e)) (inicial(e)))
                      
