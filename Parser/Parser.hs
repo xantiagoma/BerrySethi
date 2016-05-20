@@ -4,9 +4,10 @@ import RegExpr
 import NumSym
 import Text.ParserCombinators.Parsec
 import Data.Either.Combinators
+import Data.Map(Map)
 import Data.Set(Set)
 import qualified Data.Set as Set
-
+import qualified Data.Map as Map
 
 pA :: GenParser Char st Char
 pA = do l <- alphaNum
@@ -104,7 +105,9 @@ dig (Kleene e)   = Set.union (dig e) (cartesian (final(e)) (inicial(e)))
                      
 siguientes :: (Ord a) => Set (a,a) -> Map.Map a (Set a)
 siguientes s = Set.foldr f Map.empty s where
-               f (k,v) = Map.insertwith (Set.union) k (Set.singleton v)
+               f (k,v) = Map.insertWith (Set.union) k (Set.singleton v)
+
+
 
 
 
