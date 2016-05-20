@@ -102,3 +102,15 @@ dig (Union e e') = Set.union (dig e) (dig e')
 dig (Con e e')   = Set.union (dig e) (Set.union (dig e') (cartesian (final(e)) (inicial(e'))))
 dig (Kleene e)   = Set.union (dig e) (cartesian (final(e)) (inicial(e)))
                      
+siguientes :: (Ord a) => Set (a,a) -> Map.Map a (Set a)
+siguientes s = Set.foldr f Map.empty s where
+               f (k,v) = Map.insertwith (Set.union) k (Set.singleton v)
+
+
+
+
+
+
+
+
+
