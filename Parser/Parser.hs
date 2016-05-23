@@ -1,5 +1,6 @@
 module Parser(parseRegExpr) where
 
+import Automaton
 import RegExpr
 import NumSym
 import Text.ParserCombinators.Parsec
@@ -108,10 +109,22 @@ siguientes s = Set.foldr f Map.empty s where
                f (k,v) = Map.insertWith (Set.union) k (Set.singleton v)
 
 
+berrySethi :: (Ord a) => RegExpr a -> Automaton (Set (NumSym a)) a
+berrySethi reg = undefined
+
+q0 :: (Ord a) => RegExpr a -> Set (NumSym a)
+q0 reg = inicial (snd $ (toRegExprNum (1,reg)))
 
 
+fin :: (Ord a) => RegExpr a -> Set (NumSym a)
+fin reg = final (snd $ (toRegExprNum (1,reg)))
 
 
+ab :: (Ord a) => RegExpr a -> Set (NumSym a)
+ab reg = undefined
+
+inLoop :: (Ord a) => RegExpr a -> Set (NumSym a, NumSym a)
+inLoop = undefined
 
 
 
