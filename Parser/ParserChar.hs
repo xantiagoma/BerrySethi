@@ -123,9 +123,8 @@ siguientes s = Set.foldr f Map.empty s where
                f (k,v) = Map.insertWith (Set.union) k (Set.singleton v)
 
 
-berrySethi :: (Ord a) => RegExpr a -> Automaton (Set (NumSym a)) a
+berrySethi :: (Ord a) => RegExpr a -> Automaton Estado Char
 berrySethi reg = undefined
-
 q0 :: (Ord a) => RegExpr a -> Set (NumSym a)
 q0 reg = inicial (snd $ (toRegExprNum (1,reg)))
 
@@ -150,6 +149,8 @@ type Follows = Map (NumSym Char) (Set (NumSym Char))
 
 checkSym :: Char -> NumSym Char -> Bool
 checkSym a (NS i b) = a==b
+checkSym a NEp = True
+checkSym a NTerm = True
 
 getAlphas  :: [NumSym Char] -> [Char]
 getAlphas x = Set.toList (Set.fromList (getAlphas' x))
@@ -162,6 +163,12 @@ getAlpha :: NumSym Char -> Char
 getAlpha (NS i l) = l
 getAlpha NEp      = '€'
 getAlpha NTerm    = '˧'
+
+qM :: Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
+qM sig mQ = if Set.null (sndt mQ)
+          then mQ
+          else qM sig mQ'
+            where mQ' = q' (getAlphas (Set.toList (Set.elemAt 0 (sndt mQ)))) sig mQ
 
 q' :: [Char] -> Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
 q' [] _ mQ = (Set.union (fstt mQ) (Set.singleton fstNV),Set.deleteAt 0 (sndt mQ), tercero)
@@ -179,7 +186,9 @@ filterChar c q = filter (checkSym c) q
 
 unionFb' :: [NumSym Char] -> Follows -> Estado
 unionFb' [] sigs = Set.empty
-unionFb' (x:xs) sigs = Set.union (sigs Map.! x) (unionFb' xs sigs) 
+unionFb' (x:xs) sigs = if ((x == NTerm) || (x ==NEp))
+                       then Set.empty
+                       else Set.union (sigs Map.! x) (unionFb' xs sigs) 
 
 groupBy' :: [Arco] -> [[Arco]]
 groupBy' arcos = List.groupBy (\a b -> fst a == fst b) arcos
