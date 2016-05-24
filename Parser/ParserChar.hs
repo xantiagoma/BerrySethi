@@ -7,8 +7,9 @@ import Text.ParserCombinators.Parsec
 import Data.Either.Combinators
 import Data.Map(Map)
 import Data.Set(Set)
-import qualified Data.Set as Set
-import qualified Data.Map as Map
+import qualified Data.Set  as Set
+import qualified Data.Map  as Map
+import qualified Data.List as List
 
 fstt :: (a,b,c) -> a
 fstt (a,b,c) = a
@@ -143,9 +144,10 @@ inLoop :: (Ord a) => RegExpr a -> Set (NumSym a, NumSym a)
 inLoop = undefined
 
 
-type Arco   = (Char,Set (NumSym Char))
 type Estado = Set (NumSym Char)
+type Arco   = (Estado,Set (Char,Estado))
 type Follows = Map (NumSym Char) (Set (NumSym Char))
+
 checkSym :: Char -> NumSym Char -> Bool
 checkSym a (NS i b) = a==b
 
@@ -161,12 +163,15 @@ getAlpha (NS i l) = l
 getAlpha NEp      = '€'
 getAlpha NTerm    = '˧'
 
-
--- qM
-
--- q' :: [Char] -> Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
--- q' [] _ a = a
--- q' (b:bs) fol mQ = 
+q' :: [Char] -> Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
+q' [] _ mQ = (Set.union (fstt mQ) (Set.singleton fstNV),Set.deleteAt 0 (sndt mQ), trdt mQ)
+              where fstNV = Set.elemAt 0 (sndt mQ)
+q' (b:bs) fol mQ = if Set.member q'' (fstt mQ) || Set.member q'' (sndt mQ)
+                      then q' bs fol (fstt mQ, sndt mQ, Set.union (trdt mQ) (Set.singleton (fstNV, Set.singleton (b,q''))) ) --Agregar Arco
+                      else q' bs fol (fstt mQ, Set.union (sndt mQ) (Set.singleton q''),
+                                              Set.union (trdt mQ) (Set.singleton (fstNV, Set.singleton (b,q''))))
+                        where q'' = unionFb' (filterChar b (Set.toList fstNV)) fol
+                              fstNV = Set.elemAt 0 (sndt mQ)
 
 filterChar ::  Char -> [NumSym Char] -> [NumSym Char]
 filterChar c q = filter (checkSym c) q 
@@ -175,6 +180,19 @@ unionFb' :: [NumSym Char] -> Follows -> Estado
 unionFb' [] sigs = Set.empty
 unionFb' (x:xs) sigs = Set.union (sigs Map.! x) (unionFb' xs sigs) 
 
+groupBy' :: [Arco] -> [[Arco]]
+groupBy' arcos = List.groupBy (\a b -> fst a == fst b) arcos
+
+mergeRightArcos :: [Arco] -> Set (Char, Estado)
+mergeRightArcos [x] = snd x
+mergeRightArcos (x:xs) = Set.union (snd x) (mergeRightArcos xs)
+
+unionTableArcos :: [[Arco]] -> [Arco]
+unionTableArcos [xs] =  (fst (head xs), mergeRightArcos xs):[]
+unionTableArcos (xs:xss) = (fst (head xs), mergeRightArcos xs):(unionTableArcos xss)
+
+
+--Vars
 e' = parseRegExprNumWithTerm   "" "(a|b.b)*.(a.c).(a.c)*"
 mQ = (Set.empty, Set.singleton (inicial e'), Set.empty)
 q = Set.elemAt 0 (sndt mQ)
