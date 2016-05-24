@@ -120,13 +120,52 @@ fin :: (Ord a) => RegExpr a -> Set (NumSym a)
 fin reg = final (snd $ (toRegExprNum (1,reg)))
 
 
-ab :: (Ord a) => RegExpr a -> Set (NumSym a)
-ab reg = undefined
+ab :: (Ord a) => RegExpr a -> Set a
+ab (Con a b) = Set.union (ab a) (ab b)
+ab (Union a b) = Set.union (ab a) (ab b)
+ab (Kleene a) = ab a
+ab (Sym a) = Set.fromList (a:[])
 
 inLoop :: (Ord a) => RegExpr a -> Set (NumSym a, NumSym a)
 inLoop = undefined
 
 
+type Arco a = (a,Set (NumSym a))
+type Estado a = Set (NumSym a)
 
+checkSym :: (Ord a) => a -> NumSym a -> Bool
+checkSym a (NS i b) = a==b
+
+compBerrySethi ::  (Ord a) => [Char] -> RegExpr a -> Set (Arco a)
+compBerrySethi abc a = trdt tripleta
+                  where tripleta = qMay abc (Set.empty,nvini,iniarco)
+                        nvini = Set.singleton ini
+                        iniarco = Set.singleton (,ini)
+                        ini = q0 a
+
+
+
+         ---           visitados  --no visitados  --Transiciones
+qMay :: [Char] -> (Set (Estado a), Set (Estado a), Set (Arco a)) -> (Set (Estado a), Set (Estado a), Set (Arco a))
+qMay [] a     = a
+qMay (x:xs) tri = if Set.null (sndt tri)
+                    then tri
+                    else tri
+
+q' :: [Char] -> (Set (Estado a), Set (Estado a), Set (Arco a)) -> (Set (Estado a), Set (Estado a), Set (Arco a))
+q' [] tri   = tri
+q' (x:xs) tri = tri
+              where coinci = filter (checkSym x) (Set.toList prNV)
+                    prNV = Set.elemAt 0 (sndt tri)
+        
+
+fstt :: (a,b,c) -> a
+fstt (a,b,c) = a
+
+sndt :: (a,b,c) -> b
+sndt (a,b,c) = b
+
+trdt :: (a,b,c) -> c
+trdt (a,b,c) = c
 
 
