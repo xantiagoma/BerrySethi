@@ -164,8 +164,9 @@ getAlpha NEp      = '€'
 getAlpha NTerm    = '˧'
 
 q' :: [Char] -> Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
-q' [] _ mQ = (Set.union (fstt mQ) (Set.singleton fstNV),Set.deleteAt 0 (sndt mQ), trdt mQ)
+q' [] _ mQ = (Set.union (fstt mQ) (Set.singleton fstNV),Set.deleteAt 0 (sndt mQ), tercero)
               where fstNV = Set.elemAt 0 (sndt mQ)
+                    tercero = Set.fromList (unionTableArcos (groupBy' (Set.toList (trdt mQ))))
 q' (b:bs) fol mQ = if Set.member q'' (fstt mQ) || Set.member q'' (sndt mQ)
                       then q' bs fol (fstt mQ, sndt mQ, Set.union (trdt mQ) (Set.singleton (fstNV, Set.singleton (b,q''))) ) --Agregar Arco
                       else q' bs fol (fstt mQ, Set.union (sndt mQ) (Set.singleton q''),
