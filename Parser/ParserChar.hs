@@ -11,6 +11,12 @@ import qualified Data.Set  as Set
 import qualified Data.Map  as Map
 import qualified Data.List as List
 
+
+type Estado = Set (NumSym Char)
+type Arco   = (Estado,Set (Char,Estado))
+type Follows = Map (NumSym Char) (Set (NumSym Char))
+
+
 fstt :: (a,b,c) -> a
 fstt (a,b,c) = a
 
@@ -20,9 +26,50 @@ sndt (a,b,c) = b
 trdt :: (a,b,c) -> c
 trdt (a,b,c) = c
 
+
+
+setToMap :: (Ord a) => Set (a,b) -> Map a b
+setToMap set = Map.fromList (Set.toList set)
+
+convertTupleSet :: (Estado, Set (Char, Estado)) -> (Estado, Map Char Estado)
+convertTupleSet (e,a) = (e,setToMap a)
+
+convertListTupleSet :: [(Estado, Set (Char, Estado))] -> [(Estado, Map Char Estado)]
+convertListTupleSet listSet = map convertTupleSet listSet
+
+convertTuples :: [(Estado, Map Char Estado)] -> Map Estado (Map Char Estado)
+convertTuples lista = Map.fromList lista
+
+setSetToMapMap :: Set (Estado, Set (Char, Estado)) -> Map Estado (Map Char Estado)
+setSetToMapMap ss = convertTuples (convertListTupleSet (Set.toList ss)) 
+
+setSetToListList :: [Set a] -> [[a]]
+setSetToListList [x] = (Set.toList x):[]
+setSetToListList (x:xs) = (Set.toList x):(setSetToListList xs)
+
 pA :: GenParser Char st Char
 pA = do l <- alphaNum
         return $ (l)
+
+berrySethi :: RegExpr (NumSym Char) -> Automaton Estado Char
+berrySethi e' = Automaton {
+                  state = losEstados,
+                  sigma = elABCDario,
+                  delta = elDelta,
+                  initial = elInicial,
+                  accepting = losDeTerm
+                }
+                where
+                  mQ = (Set.empty ,Set.singleton (inicial e'), Set.empty)
+                  bs = (qM lossig mQ)
+                  q = Set.elemAt 0 (sndt mQ)
+                  lossig = siguientes (dig e')
+                  elDelta = setSetToMapMap (trdt bs)
+                  elInicial = inicial e'
+                  losEstados = fstt bs
+                  elABCDario = undefined
+                  losDeTerm = undefined
+
 
 parseRegExpr :: SourceName -> String -> Either ParseError (RegExpr Char)
 parseRegExpr source "" = parse pEmpty source " "
@@ -122,9 +169,6 @@ siguientes :: (Ord a) => Set (a,a) -> Map.Map a (Set a)
 siguientes s = Set.foldr f Map.empty s where
                f (k,v) = Map.insertWith (Set.union) k (Set.singleton v)
 
-
-berrySethi :: (Ord a) => RegExpr a -> Automaton Estado Char
-berrySethi reg = undefined
 q0 :: (Ord a) => RegExpr a -> Set (NumSym a)
 q0 reg = inicial (snd $ (toRegExprNum (1,reg)))
 
@@ -132,20 +176,11 @@ q0 reg = inicial (snd $ (toRegExprNum (1,reg)))
 fin :: (Ord a) => RegExpr a -> Set (NumSym a)
 fin reg = final (snd $ (toRegExprNum (1,reg)))
 
-
 ab :: (Ord a) => RegExpr a -> Set a
 ab (Con a b) = Set.union (ab a) (ab b)
 ab (Union a b) = Set.union (ab a) (ab b)
 ab (Kleene a) = ab a
 ab (Sym a) = Set.fromList (a:[])
-
-inLoop :: (Ord a) => RegExpr a -> Set (NumSym a, NumSym a)
-inLoop = undefined
-
-
-type Estado = Set (NumSym Char)
-type Arco   = (Estado,Set (Char,Estado))
-type Follows = Map (NumSym Char) (Set (NumSym Char))
 
 checkSym :: Char -> NumSym Char -> Bool
 checkSym a (NS i b) = a==b
@@ -204,5 +239,7 @@ unionTableArcos (xs:xss) = (fst (head xs), mergeRightArcos xs):(unionTableArcos 
 
 --Vars
 e' = parseRegExprNumWithTerm   "" "(a|b.b)*.(a.c).(a.c)*"
+--e' = parseRegExprNumWithTerm   "" "a.a*"
 mQ = (Set.empty, Set.singleton (inicial e'), Set.empty)
+lossig = siguientes (dig e')
 q = Set.elemAt 0 (sndt mQ)
