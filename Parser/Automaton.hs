@@ -22,6 +22,7 @@ iterar m q cc = do
   Map.lookup cc m'
 
 runDelta:: (Ord q, Ord a) => Delta q a -> q -> [a] -> Maybe q
+runDelta m q0 [] = Just q0
 runDelta m q0 [x] = iterar m q0 x
 runDelta m q0 (x:xs) = do q' <- iterar m q0 x
                           runDelta m q' xs
