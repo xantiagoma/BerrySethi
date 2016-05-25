@@ -20,14 +20,16 @@ pKleene :: GenParser Char st (RegExpr String)
 pKleene = try (Kleene <$> (pFactor <* char '*'))
   <|> pFactor
 
-pOpUnion :: GenParser Char st (RegExpr String -> RegExpr String -> RegExpr String)
+pOpUnion :: GenParser Char st
+                        (RegExpr String -> RegExpr String -> RegExpr String)
 pOpUnion = Union <$ char '|'
          <?> "Expected '|'"
 
 pConcat :: GenParser Char st (RegExpr String)
 pConcat = pKleene `chainl1` pOpConcat
 
-pOpConcat :: GenParser Char st (RegExpr String -> RegExpr String -> RegExpr String)
+pOpConcat :: GenParser Char st
+                        (RegExpr String -> RegExpr String -> RegExpr String)
 pOpConcat = Con <$ char '.'
         <?> "Expected '.'"
 

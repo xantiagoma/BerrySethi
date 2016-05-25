@@ -10,11 +10,9 @@ import qualified Data.Set as Set
 import qualified Data.Map as Map
 import qualified Data.List as List
 
-
 type Estado = Set (NumSym Char)
 type Arco   = (Estado,Set (Char,Estado))
 type Follows = Map (NumSym Char) (Set (NumSym Char))
-
 
 -- Funciones Para Manejar Tripletas
 
@@ -34,7 +32,8 @@ trdt (a,b,c) = c
 -- Utilidades
 
 -- |'setSetToMapMap' convierte un Set con un Set a un Map con un Map
-setSetToMapMap :: Set (Estado, Set (Char, Estado)) -> Map Estado (Map Char Estado)
+setSetToMapMap :: Set (Estado, Set (Char, Estado))
+                    -> Map Estado (Map Char Estado)
 setSetToMapMap ss = convertTuples (convertListTupleSet (Set.toList ss)) 
 
 convertTuples :: [(Estado, Map Char Estado)] -> Map Estado (Map Char Estado)
@@ -43,7 +42,8 @@ convertTuples lista = Map.fromList lista
 convertTupleSet :: (Estado, Set (Char, Estado)) -> (Estado, Map Char Estado)
 convertTupleSet (e,a) = (e,setToMap a)
 
-convertListTupleSet :: [(Estado, Set (Char, Estado))] -> [(Estado, Map Char Estado)]
+convertListTupleSet :: [(Estado, Set (Char, Estado))]
+                      -> [(Estado, Map Char Estado)]
 convertListTupleSet listSet = map convertTupleSet listSet
 
 setToMap :: (Ord a) => Set (a,b) -> Map a b
@@ -70,7 +70,8 @@ isTerm e = or $ map (\x -> x == NTerm) listaNS
 
 unionTableArcos :: [[Arco]] -> [Arco]
 unionTableArcos [xs] =  (fst (head xs), mergeRightArcos xs):[]
-unionTableArcos (xs:xss) = (fst (head xs), mergeRightArcos xs):(unionTableArcos xss)
+unionTableArcos (xs:xss) = (fst (head xs),
+                                  mergeRightArcos xs):(unionTableArcos xss)
 
 mergeRightArcos :: [Arco] -> Set (Char, Estado)
 mergeRightArcos [x] = snd x
@@ -128,7 +129,8 @@ berrySethi e' = Automaton {
                   accepting = losDeTerm
                 }
                 where
-                  mQ         = (Set.empty ,Set.singleton (inicial e'), Set.empty)
+                  mQ         = (Set.empty ,Set.singleton (inicial e'),
+                                                                    Set.empty)
                   bs         = (qM lossig mQ)
                   q          = Set.elemAt 0 (sndt mQ)
                   lossig     = siguientes (dig e')
@@ -136,24 +138,36 @@ berrySethi e' = Automaton {
                   elInicial  = inicial e'
                   losEstados = fstt bs
                   elABCDario = Set.fromList
-                    $ getAlphas (concat (map Set.toList (Set.toList (fstt (qM lossig mQ)))))
-                  losDeTerm  = Set.fromList $ filter isTerm (Set.toList losEstados)
+                    $ getAlphas (concat (map Set.toList
+                                          (Set.toList (fstt (qM lossig mQ)))))
+                  losDeTerm  = Set.fromList $ filter isTerm (Set.toList
+                                                                  losEstados)
 
-qM :: Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
+qM :: Follows -> (Set Estado, Set Estado, Set Arco)
+                                          -> (Set Estado, Set Estado, Set Arco)
 qM sig mQ = if Set.null (sndt mQ)
           then mQ
           else qM sig mQ'
-            where mQ' = q' (getAlphas (Set.toList (Set.elemAt 0 (sndt mQ)))) sig mQ
+            where mQ' = q' (getAlphas (Set.toList
+                                              (Set.elemAt 0 (sndt mQ)))) sig mQ
 
-q' :: [Char] -> Follows -> (Set Estado, Set Estado, Set Arco) -> (Set Estado, Set Estado, Set Arco)
-q' [] _ mQ = (Set.union (fstt mQ) (Set.singleton fstNV),Set.deleteAt 0 (sndt mQ), tercero)
+q' :: [Char] -> Follows -> (Set Estado, Set Estado, Set Arco)
+                                          -> (Set Estado, Set Estado, Set Arco)
+q' [] _ mQ = (Set.union (fstt mQ) (Set.singleton fstNV),
+                                             Set.deleteAt 0 (sndt mQ), tercero)
               where fstNV = Set.elemAt 0 (sndt mQ)
-                    tercero = Set.fromList (unionTableArcos (groupBy' (Set.toList (trdt mQ))))
+                    tercero = Set.fromList (unionTableArcos
+                                             (groupBy' (Set.toList (trdt mQ))))
 q' (b:bs) fol mQ = if Set.member q'' (fstt mQ) || Set.member q'' (sndt mQ)
-                      then q' bs fol (fstt mQ, sndt mQ, Set.union (trdt mQ) (Set.singleton (fstNV, Set.singleton (b,q''))) ) --Agregar Arco
-                      else q' bs fol (fstt mQ, Set.union (sndt mQ) (Set.singleton q''),
-                                              Set.union (trdt mQ) (Set.singleton (fstNV, Set.singleton (b,q''))))
-                        where q'' = unionFb' (filterChar b (Set.toList fstNV)) fol
+                      then q' bs fol (fstt mQ, sndt mQ, Set.union (trdt mQ)
+                                (Set.singleton (fstNV, Set.singleton (b,q''))) )
+                      else q' bs fol (fstt mQ,
+                                        Set.union (sndt mQ) (Set.singleton q''),
+                                        Set.union (trdt mQ)
+                                            (Set.singleton
+                                                (fstNV, Set.singleton (b,q''))))
+                        where q'' = unionFb'
+                                      (filterChar b (Set.toList fstNV)) fol
                               fstNV = Set.elemAt 0 (sndt mQ)
 
 
@@ -175,7 +189,8 @@ dig :: (Ord a) => RegExpr a -> Set (a,a)
 dig Empty        = Set.empty
 dig (Sym a)      = Set.empty
 dig (Union e e') = Set.union (dig e) (dig e')
-dig (Con e e')   = Set.union (dig e) (Set.union (dig e') (cartesian (final(e)) (inicial(e'))))
+dig (Con e e')   = Set.union (dig e) (Set.union (dig e')
+                                        (cartesian (final(e)) (inicial(e'))))
 dig (Kleene e)   = Set.union (dig e) (cartesian (final(e)) (inicial(e)))
                      
 ab :: (Ord a) => RegExpr a -> Set a
@@ -187,4 +202,6 @@ ab (Sym a) = Set.fromList (a:[])
 -- TEST
 
 match :: String -> String -> Bool
-match pattern subject = runAutomaton (berrySethi (parseRegExprNumWithTerm "unknown" pattern)) subject
+match pattern subject = runAutomaton (berrySethi
+                            (parseRegExprNumWithTerm "unknown" pattern))
+                            subject
