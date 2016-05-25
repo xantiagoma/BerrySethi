@@ -11,11 +11,9 @@ import qualified Data.Set  as Set
 import qualified Data.Map  as Map
 import qualified Data.List as List
 
-
 type Estado = Set (NumSym Char)
 type Arco   = (Estado,Set (Char,Estado))
 type Follows = Map (NumSym Char) (Set (NumSym Char))
-
 
 fstt :: (a,b,c) -> a
 fstt (a,b,c) = a
@@ -26,7 +24,8 @@ sndt (a,b,c) = b
 trdt :: (a,b,c) -> c
 trdt (a,b,c) = c
 
-
+noRepeat :: (Ord a) => [a] -> [a]
+noRepeat x = Set.toList (Set.fromList x)
 
 setToMap :: (Ord a) => Set (a,b) -> Map a b
 setToMap set = Map.fromList (Set.toList set)
@@ -60,15 +59,16 @@ berrySethi e' = Automaton {
                   accepting = losDeTerm
                 }
                 where
-                  mQ = (Set.empty ,Set.singleton (inicial e'), Set.empty)
-                  bs = (qM lossig mQ)
-                  q = Set.elemAt 0 (sndt mQ)
-                  lossig = siguientes (dig e')
-                  elDelta = setSetToMapMap (trdt bs)
-                  elInicial = inicial e'
+                  mQ         = (Set.empty ,Set.singleton (inicial e'), Set.empty)
+                  bs         = (qM lossig mQ)
+                  q          = Set.elemAt 0 (sndt mQ)
+                  lossig     = siguientes (dig e')
+                  elDelta    = setSetToMapMap (trdt bs)
+                  elInicial  = inicial e'
                   losEstados = fstt bs
-                  elABCDario = undefined
-                  losDeTerm = undefined
+                  elABCDario = Set.fromList
+                    $ getAlphas (concat (map Set.toList (Set.toList (fstt (qM lossig mQ)))))
+                  losDeTerm  = Set.fromList $ filter isTerm (Set.toList losEstados)
 
 
 parseRegExpr :: SourceName -> String -> Either ParseError (RegExpr Char)
@@ -107,7 +107,11 @@ pFactor :: GenParser Char st (RegExpr Char)
 pFactor = Sym <$> pA
        <|> pParens pRegExpr
 
-pParens = between(char '(') (char ')')
+isTerm :: Estado -> Bool
+isTerm e = or $ map (\x -> x == NTerm) listaNS 
+          where listaNS = Set.toList e
+
+pParens = between (char '(') (char ')')
 
 toRegExprNum :: (Int,RegExpr a) -> (Int, RegExpr (NumSym a))
 toRegExprNum (i,Empty)      = (i, Sym (NEp) )
@@ -188,7 +192,7 @@ checkSym a NEp = True
 checkSym a NTerm = True
 
 getAlphas  :: [NumSym Char] -> [Char]
-getAlphas x = Set.toList (Set.fromList (getAlphas' x))
+getAlphas x = noRepeat (getAlphas' x)
 
 getAlphas' :: [NumSym Char] -> [Char]
 getAlphas' [] = []
@@ -239,7 +243,3 @@ unionTableArcos (xs:xss) = (fst (head xs), mergeRightArcos xs):(unionTableArcos 
 
 --Vars
 e' = parseRegExprNumWithTerm   "" "(a|b.b)*.(a.c).(a.c)*"
---e' = parseRegExprNumWithTerm   "" "a.a*"
-mQ = (Set.empty, Set.singleton (inicial e'), Set.empty)
-lossig = siguientes (dig e')
-q = Set.elemAt 0 (sndt mQ)
