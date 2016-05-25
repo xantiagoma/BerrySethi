@@ -183,3 +183,8 @@ ab (Con a b) = Set.union (ab a) (ab b)
 ab (Union a b) = Set.union (ab a) (ab b)
 ab (Kleene a) = ab a
 ab (Sym a) = Set.fromList (a:[])
+
+-- TEST
+
+match :: String -> String -> Bool
+match pattern subject = runAutomaton (berrySethi (parseRegExprNumWithTerm "unknown" pattern)) subject
