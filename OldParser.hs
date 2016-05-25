@@ -1,4 +1,4 @@
-module Parser(parseRegExpr) where
+module OldParser(parseRegExpr) where
 
 import Automaton
 import RegExpr

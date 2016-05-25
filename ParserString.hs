@@ -1,4 +1,4 @@
-module Parser where
+module ParserString where
 
 import RegExpr
 import Text.ParserCombinators.Parsec
