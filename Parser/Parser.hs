@@ -71,24 +71,3 @@ parseRegExprNum source st = snd $ toRegExprNum (1,noNum)
 parseRegExprNumWithTerm :: SourceName -> String -> RegExpr (NumSym Char)
 parseRegExprNumWithTerm source st = Con q (Sym NTerm)
                                       where q = parseRegExprNum source st
-
-
-ab :: (Ord a) => RegExpr a -> Set a
-ab (Con a b) = Set.union (ab a) (ab b)
-ab (Union a b) = Set.union (ab a) (ab b)
-ab (Kleene a) = ab a
-ab (Sym a) = Set.fromList (a:[])
-
-
-
-
-
-
-
-
-
-
-
-
---Vars
-e' = parseRegExprNumWithTerm   "" "(a|b.b)*.(a.c).(a.c)*"

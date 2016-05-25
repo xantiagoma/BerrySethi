@@ -37,11 +37,6 @@ trdt (a,b,c) = c
 setSetToMapMap :: Set (Estado, Set (Char, Estado)) -> Map Estado (Map Char Estado)
 setSetToMapMap ss = convertTuples (convertListTupleSet (Set.toList ss)) 
 
--- |'setSetToListList' convierte un Set de Sets a una Lista de Listas
-setSetToListList :: [Set a] -> [[a]]
-setSetToListList [x] = (Set.toList x):[]
-setSetToListList (x:xs) = (Set.toList x):(setSetToListList xs)
-
 convertTuples :: [(Estado, Map Char Estado)] -> Map Estado (Map Char Estado)
 convertTuples lista = Map.fromList lista
 
@@ -120,9 +115,6 @@ final (Kleene e) = final e
 fin :: (Ord a) => RegExpr a -> Set (NumSym a)
 fin reg = final (snd $ (toRegExprNum (1,reg)))
 
-
-
-
 -- Algoritmo de Berry-Sethi
 
 
@@ -186,3 +178,8 @@ dig (Union e e') = Set.union (dig e) (dig e')
 dig (Con e e')   = Set.union (dig e) (Set.union (dig e') (cartesian (final(e)) (inicial(e'))))
 dig (Kleene e)   = Set.union (dig e) (cartesian (final(e)) (inicial(e)))
                      
+ab :: (Ord a) => RegExpr a -> Set a
+ab (Con a b) = Set.union (ab a) (ab b)
+ab (Union a b) = Set.union (ab a) (ab b)
+ab (Kleene a) = ab a
+ab (Sym a) = Set.fromList (a:[])
